@@ -1,5 +1,4 @@
-﻿using Microsoft.AzureCAT.Samples.DataPipeline;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Newtonsoft.Json;
 using System;
@@ -13,6 +12,8 @@ namespace Microsoft.AzureCAT.Samples.DataPipeline
 {
     public class AzureBlobPublisherPipeline<TInput> : BatchingWindowBase<TInput, byte[]>
     {
+        // TODO - add metrics to this class
+
         private readonly Func<string> _blobNameFunc;
         private readonly CloudBlobContainer _container;
 
@@ -31,16 +32,18 @@ namespace Microsoft.AzureCAT.Samples.DataPipeline
         {
             foreach (var e in evts)
             {
+                string blobName = "Unknown";
                 try
                 {
-                    var blobName = _blobNameFunc();
+                    blobName = _blobNameFunc();
                     var blobRef = _container.GetBlockBlobReference(blobName);
 
                     await blobRef.UploadFromByteArrayAsync(e, 0, e.Length);
                 }
                 catch (Exception ex)
                 {
-                    // TODO - log this in more detail
+                    _logger.LogError(0, ex, "Could not publish blob {blobName} to {containerName} on account {account}",
+                        blobName, _container.Name, _container.StorageUri.ToString());                  
                 }
             }
         }
@@ -49,7 +52,7 @@ namespace Microsoft.AzureCAT.Samples.DataPipeline
         {            
             try
             {
-                // TODO ; handle compresion
+                // TODO; handle compresion
                 using (var ms = new MemoryStream())
                 {
                     foreach (var e in evts)
@@ -65,10 +68,9 @@ namespace Microsoft.AzureCAT.Samples.DataPipeline
             }
             catch (Exception ex)
             {
-                // TODO - log this in more detail
+                _logger.LogError(0, ex, "Could not transform events");               
                 return Enumerable.Empty<byte[]>();
-            }
-           
+            }           
         }
     }
 }

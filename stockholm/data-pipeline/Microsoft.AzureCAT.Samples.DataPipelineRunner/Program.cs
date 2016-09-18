@@ -39,16 +39,16 @@ namespace Microsoft.AzureCAT.Samples.DataPipelineRunner
             {
                 // container was created
             }
-
+   
             // Create the data pipeline
             var batchConfiguration = new BatchingWindowConfiguration()
             {
-                CompressAfterTransform = false,
-                MaxBacklogSize = 1024,
-                MaxPublishBacklogSize = 4,
-                MaxWindowEventCount = 32000,
-                PublishDegreeOfParallelism = 2,
-                SlidingWindowSize = TimeSpan.FromSeconds(30)
+                CompressAfterTransform = config.GetValue<bool>("pipeline:compress"),
+                MaxBacklogSize = config.GetValue<int>("pipeline:backlog"),
+                MaxPublishBacklogSize = config.GetValue<int>("pipeline:publishBacklog"),
+                MaxWindowEventCount = config.GetValue<int>("pipeline:maxBatchSize"),
+                PublishDegreeOfParallelism = config.GetValue<int>("pipeline:publishConcurrency"),
+                SlidingWindowSize = config.GetValue<TimeSpan>("pipeline:maxWindowSize"),
             };
 
             var blobPublisher = new AzureBlobPublisherPipeline<SampleData>(
@@ -59,9 +59,10 @@ namespace Microsoft.AzureCAT.Samples.DataPipelineRunner
 
             // Create the sample data generator (TODO - base this on config)
             var dataGenerator = new SampleDataGenerator(
-                period: 1000,
-                maxEventsPerTick: 1,
-                pub: blobPublisher.Enqueue
+                period: (int)config.GetValue<TimeSpan>("dataGenerator:period").TotalMilliseconds,
+                maxEventsPerTick: config.GetValue<int>("dataGenerator:maxEventsPerTick"),
+                pub: blobPublisher.Enqueue,
+                logger: logger
             );
 
 

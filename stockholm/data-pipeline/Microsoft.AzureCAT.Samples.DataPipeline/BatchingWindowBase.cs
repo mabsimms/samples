@@ -28,7 +28,7 @@ namespace Microsoft.AzureCAT.Samples.DataPipeline
 
         private long _droppedEvents;
 
-        private readonly ILogger _logger;
+        protected readonly ILogger _logger;
 
         public BatchingWindowBase(BatchingWindowConfiguration config,
           ILogger logger)
