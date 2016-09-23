@@ -7,6 +7,6 @@ namespace Microsoft.AzureCAT.Samples.LoggingCommon.Events
 {
     public class WebEventExtensions
     {
-        Serilog.ILogger
+         
     }
 }

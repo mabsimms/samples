@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.AzureCAT.Samples.Logging.Plugins;
+using Serilog;
+using Microsoft.AzureCAT.Samples.LoggingCommon;
 
 namespace Microsoft.AzureCAT.Samples.WebLogger
 {
@@ -27,6 +30,8 @@ namespace Microsoft.AzureCAT.Samples.WebLogger
 
             builder.AddEnvironmentVariables();
             Configuration = builder.Build();
+
+            LoggingManager.Configure(Configuration);
         }
 
         public IConfigurationRoot Configuration { get; }
@@ -34,21 +39,24 @@ namespace Microsoft.AzureCAT.Samples.WebLogger
         // This method gets called by the runtime. Use this method to add services to the container
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddLogging();
+
             // Add framework services.
-            services.AddApplicationInsightsTelemetry(Configuration);
+            //services.AddApplicationInsightsTelemetry(Configuration);
 
             services.AddMvc();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, 
+            IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
+            loggerFactory.AddSerilog();
+                       
+            //app.UseApplicationInsightsRequestTelemetry();
+            //app.UseApplicationInsightsExceptionTelemetry();
 
-            app.UseApplicationInsightsRequestTelemetry();
-
-            app.UseApplicationInsightsExceptionTelemetry();
+            app.UseHttpLoggingModule();
 
             app.UseMvc();
         }
